@@ -1,0 +1,93 @@
+#include <iostream>
+#include <vector>
+#include <cstdlib>
+#include <ctime>
+using namespace std;
+
+const char PARED = '#';
+const char CAMINO = '.';
+
+// Movimientos
+int dx[4] = {1, -1, 0, 0};
+int dy[4] = {0, 0, -1, 1};
+
+// DFS para cavar el laberinto
+void dfs(int x, int y, vector<vector<char>>& matriz, vector<vector<bool>>& visitado, int n) {
+    visitado[x][y] = true;
+    matriz[x][y] = CAMINO;
+
+    // Mezclar direcciones
+    for (int i = 0; i < 4; i++) {
+        int indiceAlea = rand() % 4;
+        swap(dx[i], dx[indiceAlea]);
+        swap(dy[i], dy[indiceAlea]);
+    }
+
+    // Visitar vecinos
+    for (int i = 0; i < 4; i++) {
+        int nx = x + dx[i];
+        int ny = y + dy[i];
+
+        if (nx >= 0 && nx < n && ny >= 0 && ny < n) {
+            if (!visitado[nx][ny]) {
+                matriz[nx][ny] = CAMINO;
+                dfs(nx, ny, matriz, visitado, n);
+            }
+        }
+    }
+}
+
+// Agregar paredes aleatorias
+void agregarParedes(vector<vector<char>>& matriz, int n, int porparedes = 65) {
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            if (matriz[i][j] == CAMINO && (rand() % 100) < porparedes) {
+                matriz[i][j] = PARED;
+            }
+        }
+    }
+}
+
+int main() {
+    srand(time(0));
+
+    int n;
+    cout << "Ingrese tamaño de matriz desde 9: ";
+    cin >> n;
+
+    vector<vector<char>> matriz(n, vector<char>(n, PARED));
+    vector<vector<bool>> visitado(n, vector<bool>(n, false));
+
+    // Primer DFS: genera un laberinto completo
+    dfs(0, 0, matriz, visitado, n);
+
+    // Marcar entrada y salida
+    matriz[0][0] = 'E';
+    matriz[n-1][n-1] = 'S';
+
+    // Agregar paredes
+    agregarParedes(matriz, n, 40);
+
+    // ---- Reparar el camino E → S después de agregar paredes ----
+    // Resetear visitado
+    for (int i = 0; i < n; i++)
+        for (int j = 0; j < n; j++)
+            visitado[i][j] = false;
+
+    // Asegurar camino mínimo desde la entrada a la salida
+    dfs(0, 0, matriz, visitado, n);
+
+    // Restaurar etiquetas
+    matriz[0][0] = 'E';
+    matriz[n-1][n-1] = 'S';
+
+    // Imprimir laberinto
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            cout << matriz[i][j] << " ";
+        }
+        cout << endl;
+    }
+
+    return 0;
+}
